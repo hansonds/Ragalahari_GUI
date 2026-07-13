@@ -102,15 +102,7 @@ It stores the following state seamlessly:
 
 ---
 
-## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome!
-
-1. Fork the Project
-2. Create your Feature Branch
-3. Commit your Changes
-4. Push to the Branch
-5. Open a Pull Request
 
 ---
 
@@ -119,6 +111,4 @@ Contributions, issues, and feature requests are welcome!
 > This tool is created for educational and personal archiving purposes only. Please respect the Terms of Service of [Ragalahari.com](https://www.ragalahari.com) and do not use this script to overload their servers. The developer assumes no liability for the misuse of this software or copyright infringement.
 
 ---
-### ⚖️ License
 
-Distributed under the MIT License. See `LICENSE` for more information.
