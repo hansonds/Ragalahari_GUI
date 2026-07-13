@@ -286,7 +286,7 @@ class DownloaderApp(ctk.CTk):
         self.url_frame = ctk.CTkFrame(self, fg_color=UI["frame"], corner_radius=10)
         self.url_frame.pack(fill="x", padx=35, pady=10)
         
-        ctk.CTkLabel(self.url_frame, text="Actor gallery profile URL:", text_color=UI["text_dim"], font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=15, pady=(15, 0))
+        ctk.CTkLabel(self.url_frame, text="Actor/Actress Gallery URL:", text_color=UI["text_dim"], font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=15, pady=(15, 0))
         self.url_entry = ctk.CTkEntry(
             self.url_frame, 
             placeholder_text="https://www.ragalahari.com/... .aspx", 
