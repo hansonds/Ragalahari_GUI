@@ -46,7 +46,7 @@ To run the Python script from source, you will need:
 ## 🛠️ Installation
 
 **1. Clone the repository:**
-git clone https://github.com/yourusername/ragalahari-downloader.git
+git clone https://github.com/yourusername/ragalahari_GUI.git
 cd ragalahari-downloader
 
 **2. Install required dependencies:**
