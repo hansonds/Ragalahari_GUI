@@ -52,25 +52,26 @@ HEADERS = {
 session = requests.Session()
 session.headers.update(HEADERS)
 
-# ─── Professional UI Color Palette ───────────────────────────────────────────
+# ─── Colorful & Eye-Friendly UI Palette (Catppuccin Mocha Inspired) ──────────
 
 UI = {
-    "bg": "#202124",             
-    "frame": "#292A2D",          
-    "accent": "#8AB4F8",         
-    "accent_hover": "#AECBFA",   
-    "text": "#E8EAED",           
-    "text_dim": "#9AA0A6",       
-    "btn_start": "#1E8E3E",      
-    "btn_start_hover": "#1A7332",
-    "btn_stop": "#D93025",       
-    "btn_stop_hover": "#B3261E",
-    "btn_browse": "#3C4043",     
-    "btn_browse_hover": "#5F6368",
-    "input_bg": "#171717",       
-    "input_border": "#5F6368",   
-    "log_bg": "#171717",         
-    "log_text": "#E8EAED"        
+    "bg": "#1E1E2E",             # Deep warm midnight background
+    "frame": "#313244",          # Lighter surface for panels
+    "accent": "#CBA6F7",         # Beautiful soft Mauve/Purple
+    "accent_hover": "#F5C2E7",   # Soft Pink for hovering
+    "text": "#CDD6F4",           # Crisp, soft off-white for text
+    "text_dim": "#89B4FA",       # Vibrant Sky Blue for subtitles (adds great color)
+    "btn_start": "#A6E3A1",      # Mint Green for Start
+    "btn_start_hover": "#94E2D5",# Teal for Start hover
+    "btn_stop": "#F38BA8",       # Soft Rose Red for Stop
+    "btn_stop_hover": "#EBA0AC", # Maroon for Stop hover
+    "btn_browse": "#89DCEB",     # Bright cyan for action buttons
+    "btn_browse_hover": "#74C7D6",
+    "input_bg": "#11111B",       # Very dark crust for input boxes (depth)
+    "input_border": "#585B70",   # Soft gray borders
+    "log_bg": "#181825",         # Slightly darker than bg for the terminal
+    "log_text": "#F9E2AF",       # Soft Amber/Yellow for log text
+    "button_text": "#11111B"     # Dark text color for buttons to ensure high contrast
 }
 
 # ─── Core Scraper Logic (Untouched features) ─────────────────────────────────
@@ -225,7 +226,7 @@ class DownloaderApp(ctk.CTk):
         self.minsize(750, 680)
         self.configure(fg_color=UI["bg"]) 
         
-        # --- FIX: Set Application Icon using .ico for Windows ---
+        # --- Set Application Icon ---
         try:
             ico_path = resource_path("logo.ico")
             self.iconbitmap(ico_path)
@@ -277,28 +278,61 @@ class DownloaderApp(ctk.CTk):
         self.header_label = ctk.CTkLabel(
             self, 
             text="RAGALAHARI GALLERY DOWNLOADER", 
-            font=ctk.CTkFont(size=22, weight="bold", family="Segoe UI"),
-            text_color=UI["text"]
+            font=ctk.CTkFont(size=24, weight="bold", family="Segoe UI Black"),
+            text_color=UI["accent"]
         )
         self.header_label.pack(pady=(25, 15))
 
         # URL Frame
-        self.url_frame = ctk.CTkFrame(self, fg_color=UI["frame"], corner_radius=10)
+        self.url_frame = ctk.CTkFrame(self, fg_color=UI["frame"], corner_radius=12)
         self.url_frame.pack(fill="x", padx=35, pady=10)
         
-        ctk.CTkLabel(self.url_frame, text="Actor/Actress Gallery URL:", text_color=UI["text_dim"], font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=15, pady=(15, 0))
+        ctk.CTkLabel(self.url_frame, text="Actor/Actress gallery URL:", text_color=UI["text_dim"], font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=15, pady=(15, 0))
+        
+        # --- Container for Entry and Paste/Clear Buttons ---
+        self.url_input_container = ctk.CTkFrame(self.url_frame, fg_color="transparent")
+        self.url_input_container.pack(fill="x", padx=15, pady=(5, 15))
+        
         self.url_entry = ctk.CTkEntry(
-            self.url_frame, 
+            self.url_input_container, 
             placeholder_text="https://www.ragalahari.com/... .aspx", 
-            height=40,
+            height=42,
             fg_color=UI["input_bg"],
             border_color=UI["input_border"],
             text_color=UI["text"]
         )
-        self.url_entry.pack(fill="x", padx=15, pady=(5, 15))
+        self.url_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        
+        # Paste Button
+        self.paste_btn = ctk.CTkButton(
+            self.url_input_container, 
+            text="Paste", 
+            font=ctk.CTkFont(weight="bold"),
+            width=65, 
+            height=42,
+            fg_color=UI["btn_browse"], 
+            hover_color=UI["btn_browse_hover"],
+            text_color=UI["button_text"],
+            command=self.paste_url
+        )
+        self.paste_btn.pack(side="left", padx=(0, 5))
+        
+        # Clear Button
+        self.clear_btn = ctk.CTkButton(
+            self.url_input_container, 
+            text="Clear", 
+            font=ctk.CTkFont(weight="bold"),
+            width=65, 
+            height=42,
+            fg_color=UI["btn_stop"], 
+            hover_color=UI["btn_stop_hover"],
+            text_color=UI["button_text"],
+            command=self.clear_url
+        )
+        self.clear_btn.pack(side="left")
 
         # Settings Frame
-        self.settings_frame = ctk.CTkFrame(self, fg_color=UI["frame"], corner_radius=10)
+        self.settings_frame = ctk.CTkFrame(self, fg_color=UI["frame"], corner_radius=12)
         self.settings_frame.pack(fill="x", padx=35, pady=10)
         self.settings_frame.grid_columnconfigure(1, weight=1)
 
@@ -306,7 +340,7 @@ class DownloaderApp(ctk.CTk):
         ctk.CTkLabel(self.settings_frame, text="Save Location:", text_color=UI["text_dim"], font=ctk.CTkFont(weight="bold")).grid(row=0, column=0, padx=15, pady=(15, 5), sticky="w")
         self.path_entry = ctk.CTkEntry(
             self.settings_frame, 
-            height=35,
+            height=38,
             fg_color=UI["input_bg"],
             border_color=UI["input_border"],
             text_color=UI["text"]
@@ -317,10 +351,12 @@ class DownloaderApp(ctk.CTk):
         self.browse_btn = ctk.CTkButton(
             self.settings_frame, 
             text="Browse", 
+            font=ctk.CTkFont(weight="bold"),
             width=80, 
+            height=38,
             fg_color=UI["btn_browse"], 
             hover_color=UI["btn_browse_hover"],
-            text_color=UI["text"],
+            text_color=UI["button_text"],
             command=self.browse_folder
         )
         self.browse_btn.grid(row=0, column=2, padx=(0, 15), pady=(15, 5))
@@ -343,7 +379,7 @@ class DownloaderApp(ctk.CTk):
         self.threads_slider.set(self.config["threads"])
         self.threads_slider.pack(side="left", fill="x", expand=True, padx=(0, 10))
         
-        self.threads_label = ctk.CTkLabel(self.slider_frame, text=str(self.config["threads"]), font=ctk.CTkFont(weight="bold", size=14), text_color=UI["text"])
+        self.threads_label = ctk.CTkLabel(self.slider_frame, text=str(self.config["threads"]), font=ctk.CTkFont(weight="bold", size=15), text_color=UI["accent"])
         self.threads_label.pack(side="right", padx=(5, 0))
 
         # Direct Download Checkbox
@@ -366,28 +402,28 @@ class DownloaderApp(ctk.CTk):
         
         self.start_btn = ctk.CTkButton(
             self.btn_frame, 
-            text="Start Download", 
+            text="▶ START DOWNLOAD", 
             font=ctk.CTkFont(weight="bold", size=14), 
-            height=40, 
-            width=180,
-            corner_radius=6,
+            height=45, 
+            width=200,
+            corner_radius=8,
             fg_color=UI["btn_start"],
             hover_color=UI["btn_start_hover"],
-            text_color="white",
+            text_color=UI["button_text"],
             command=self.start_download_thread
         )
         self.start_btn.pack(side="left", padx=10)
 
         self.stop_btn = ctk.CTkButton(
             self.btn_frame, 
-            text="Stop / Cancel", 
+            text="■ STOP / CANCEL", 
             font=ctk.CTkFont(weight="bold", size=14), 
-            height=40, 
-            width=180,
-            corner_radius=6,
-            fg_color=UI["btn_stop"], 
+            height=45, 
+            width=200,
+            corner_radius=8,
+            fg_color=UI["frame"], 
             hover_color=UI["btn_stop_hover"], 
-            text_color="white",
+            text_color=UI["text_dim"],
             state="disabled", 
             command=self.stop_download
         )
@@ -396,29 +432,44 @@ class DownloaderApp(ctk.CTk):
         # Progress Area
         self.progress_bar = ctk.CTkProgressBar(
             self, 
-            height=10, 
-            corner_radius=5,
+            height=12, 
+            corner_radius=6,
             progress_color=UI["accent"],
             fg_color=UI["frame"]
         )
         self.progress_bar.set(0)
         self.progress_bar.pack(fill="x", padx=35, pady=(5, 5))
         
-        self.status_label = ctk.CTkLabel(self, text="Ready.", text_color=UI["text_dim"], font=ctk.CTkFont(size=12))
+        self.status_label = ctk.CTkLabel(self, text="Ready.", text_color=UI["text_dim"], font=ctk.CTkFont(size=13))
         self.status_label.pack(pady=(0, 10))
 
         # Log Console
         self.log_box = ctk.CTkTextbox(
             self, 
             state="disabled", 
-            font=ctk.CTkFont(family="Consolas", size=12),
+            font=ctk.CTkFont(family="Consolas", size=13),
             fg_color=UI["log_bg"],
             text_color=UI["log_text"],
             border_color=UI["frame"],
-            border_width=1,
-            corner_radius=8
+            border_width=2,
+            corner_radius=10
         )
         self.log_box.pack(fill="both", expand=True, padx=35, pady=(0, 25))
+
+    # --- New Button Commands ---
+    def paste_url(self):
+        try:
+            clipboard_data = self.clipboard_get()
+            if clipboard_data:
+                self.url_entry.delete(0, "end")
+                self.url_entry.insert(0, clipboard_data.strip())
+        except tk.TclError:
+            pass  # Clipboard is empty or contains non-text
+
+    def clear_url(self):
+        self.url_entry.delete(0, "end")
+
+    # ---------------------------
 
     def on_thread_change(self, value):
         self.threads_label.configure(text=str(int(value)))
@@ -436,7 +487,7 @@ class DownloaderApp(ctk.CTk):
         
     def _log_ui(self, message):
         self.log_box.configure(state="normal")
-        self.log_box.insert("end", message + "\n")
+        self.log_box.insert("end", "> " + message + "\n")
         self.log_box.see("end")
         self.log_box.configure(state="disabled")
 
@@ -475,8 +526,9 @@ class DownloaderApp(ctk.CTk):
         self.log_box.configure(state="disabled")
         self.log("System Initialized. Starting process...")
         
-        self.start_btn.configure(state="disabled", fg_color=UI["frame"])
-        self.stop_btn.configure(state="normal", fg_color=UI["btn_stop"])
+        # Toggle buttons for active downloading state
+        self.start_btn.configure(state="disabled", fg_color=UI["frame"], text_color=UI["text_dim"])
+        self.stop_btn.configure(state="normal", fg_color=UI["btn_stop"], text_color=UI["button_text"])
         self.progress_bar.set(0)
         
         # Start background thread
@@ -510,8 +562,10 @@ class DownloaderApp(ctk.CTk):
             
         finally:
             self.is_downloading = False
-            self.after(0, lambda: self.start_btn.configure(state="normal", fg_color=UI["btn_start"]))
-            self.after(0, lambda: self.stop_btn.configure(state="disabled", fg_color=UI["frame"]))
+            # Toggle buttons back to ready state
+            self.after(0, lambda: self.start_btn.configure(state="normal", fg_color=UI["btn_start"], text_color=UI["button_text"]))
+            self.after(0, lambda: self.stop_btn.configure(state="disabled", fg_color=UI["frame"], text_color=UI["text_dim"]))
+            
             if self.stop_event.is_set():
                 self.update_status("Download cancelled.")
                 self.log("[!] Operation Cancelled by User.")
