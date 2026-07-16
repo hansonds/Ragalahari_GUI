@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>📸 Ragalahari Gallery Downloader</h1>   **[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
+  <h1>📸 Ragalahari Gallery Downloader</h1>
   <p>
     <img src="https://img.shields.io/badge/python-3.8%2B-blue.svg" alt="Python Version">
     <img src="https://img.shields.io/badge/UI-CustomTkinter-emerald.svg" alt="CustomTkinter">
@@ -7,6 +7,8 @@
     <img src="https://img.shields.io/badge/platform-Windows-lightgrey.svg" alt="Platform">
   </p>
   <p><i>A professional, multi-threaded Windows GUI application designed to batch-download high-resolution image galleries from Ragalahari.com effortlessly.</i></p>
+
+**[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
 
   <img src="Screenshot 2026-07-14 102524.png" alt="Ragalahari Downloader Main UI" width="700">
 </div>
