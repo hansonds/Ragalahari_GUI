@@ -1,5 +1,3 @@
-**[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
-
 <div align="center">
   <h1>📸 Ragalahari Gallery Downloader</h1>
   <p>
@@ -15,6 +13,8 @@
 
 ---
 
+**[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
+
 ## 📑 Table of Contents
 - [🚀 Features](#-features)
 - [🦸‍♂️ Feature Spotlight: Broken Image Recovery](#️-feature-spotlight-broken-image-recovery)
@@ -27,6 +27,8 @@
 - [⚠️ Disclaimer](#️-disclaimer)
 
 ---
+
+**[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
 
 ## 🚀 Features
 
