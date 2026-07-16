@@ -1,3 +1,5 @@
+**[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
+
 <div align="center">
   <h1>📸 Ragalahari Gallery Downloader</h1>
   <p>
