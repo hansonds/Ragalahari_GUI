@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>📸 Ragalahari Gallery Downloader</h1>
+  <h1>📸 Ragalahari Gallery Downloader</h1>   **[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
   <p>
     <img src="https://img.shields.io/badge/python-3.8%2B-blue.svg" alt="Python Version">
     <img src="https://img.shields.io/badge/UI-CustomTkinter-emerald.svg" alt="CustomTkinter">
