@@ -56,6 +56,8 @@ Older galleries on the website often suffer from dead links or geo-blocking, res
 
 ---
 
+**[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
+
 ## 💻 Prerequisites
 
 To run the Python script from source, you will need:
