@@ -74,7 +74,7 @@ UI = {
     "button_text": "#11111B"     # Dark text color for buttons to ensure high contrast
 }
 
-# ─── Core Scraper Logic (Untouched features) ─────────────────────────────────
+# ─── Core Scraper Logic ──────────────────────────────────────────────────────
 
 def fetch(url, retries=3):
     for attempt in range(retries):
@@ -107,7 +107,15 @@ def get_galleries(actor_url):
     if not soup:
         return galleries
     gallery_patterns = ['/actress/', '/actor/', '/gallery/', '/photos/']
-    for link in soup.find_all('a', href=True):
+    
+    # FIX: Restrict the search to the actual gallery section to avoid picking up 
+    # "Latest Starzone" or "Latest Updates" from the sidebar/footer.
+    galleries_panel = soup.find('div', id='galleries_panel')
+    
+    # Fallback to the whole page only if the galleries panel isn't found
+    search_area = galleries_panel if galleries_panel else soup
+
+    for link in search_area.find_all('a', href=True):
         href = link.get('href', '')
         if any(p in href for p in gallery_patterns) and href.endswith('.aspx'):
             name = link.get_text(strip=True)
@@ -170,10 +178,18 @@ def get_gallery_pages(gallery_url):
 def get_images_from_page(soup):
     images = []
     if not soup: return images
+    
+    # Target the specific container holding the images
     galdiv = soup.find('div', id='galdiv')
-    thumb_imgs = galdiv.find_all('img', class_=re.compile(r'thumbnail|lazyload', re.I)) if galdiv else soup.find_all('img', class_=re.compile(r'thumbnail|lazyload', re.I))
-    if galdiv and not thumb_imgs:
-        thumb_imgs = galdiv.find_all('img', src=True)
+    
+    # FIX: If galdiv isn't found, try to scope to the main column to avoid sidebars
+    if galdiv:
+        thumb_imgs = galdiv.find_all('img', class_=re.compile(r'thumbnail|lazyload', re.I))
+        if not thumb_imgs:
+            thumb_imgs = galdiv.find_all('img', src=True)
+    else:
+        main_content = soup.find('div', class_='raga-movie') or soup
+        thumb_imgs = main_content.find_all('img', class_=re.compile(r'thumbnail|lazyload', re.I))
 
     seen = set()
     for img in thumb_imgs:
@@ -287,7 +303,7 @@ class DownloaderApp(ctk.CTk):
         self.url_frame = ctk.CTkFrame(self, fg_color=UI["frame"], corner_radius=12)
         self.url_frame.pack(fill="x", padx=35, pady=10)
         
-        ctk.CTkLabel(self.url_frame, text="Actor/Actress gallery URL:", text_color=UI["text_dim"], font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=15, pady=(15, 0))
+        ctk.CTkLabel(self.url_frame, text="Actor/Actress gallery or Profile URL:", text_color=UI["text_dim"], font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=15, pady=(15, 0))
         
         # --- Container for Entry and Paste/Clear Buttons ---
         self.url_input_container = ctk.CTkFrame(self.url_frame, fg_color="transparent")
