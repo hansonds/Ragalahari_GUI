@@ -46,7 +46,6 @@ HEADERS = {
     "Referer": BASE_URL,
 }
 
-# FIX 1: Massively increase the connection pool so IDM-style chunks don't block each other
 session = requests.Session()
 adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100, max_retries=2)
 session.mount('http://', adapter)
@@ -422,16 +421,20 @@ class DownloaderApp(ctk.CTk):
             if '/stars/profile/' in url or '/star/' in url or re.search(r'/stars?/\d+/', url):
                 actor_name = url.split('/')[-1].replace('.aspx', '').replace('-', ' ').title()
                 galleries = get_galleries(url)
-                if not galleries: self.log("[-] No galleries found.")
+                if not galleries: 
+                    self.log("[-] No galleries found.")
                 else:
-                    self.log(f"[+] Found {len(galleries)} galleries.")
+                    self.log(f"[+] Found {len(galleries)} galleries. Reversing order...")
+                    galleries.reverse() # Start processing from the last gallery first
                     for i, gal in enumerate(galleries, 1):
                         if self.stop_event.is_set(): break
                         self.log(f"\n[*] Processing Gallery {i}/{len(galleries)}: {gal['name']}")
-                        self.process_gallery(gal['url'], gal['name'], actor_name, base_save_dir)
+                        # Pass `i` as the gallery index to be used for the folder name
+                        self.process_gallery(gal['url'], gal['name'], actor_name, base_save_dir, gallery_index=i)
             else:
                 gallery_name = url.split('/')[-1].replace('.aspx', '').replace('-', ' ').title()
-                self.process_gallery(url, gallery_name, "Direct", base_save_dir)
+                # Pass 1 for single direct galleries
+                self.process_gallery(url, gallery_name, "Direct", base_save_dir, gallery_index=1)
         except Exception as e:
             self.log(f"[ERROR] Critical failure: {str(e)}")
         finally:
@@ -441,7 +444,7 @@ class DownloaderApp(ctk.CTk):
             if self.stop_event.is_set(): self.log("[!] Operation Cancelled.")
             else: self.log("\n[✓] Completed.")
 
-    def process_gallery(self, url, gallery_name, actor_name, base_save_dir):
+    def process_gallery(self, url, gallery_name, actor_name, base_save_dir, gallery_index):
         self.log(f"[*] Scanning pages...")
         pages = get_gallery_pages(url)
         all_images, seen = [], set()
@@ -457,19 +460,21 @@ class DownloaderApp(ctk.CTk):
             self.update_status(f"Scanning page {i}/{len(pages)}...")
 
         if not all_images: return self.log("[-] No images found.")
-        self.execute_download(all_images, gallery_name, actor_name, base_save_dir)
+        self.execute_download(all_images, gallery_name, actor_name, base_save_dir, gallery_index)
 
-    def execute_download(self, images, gallery_name, actor_name, base_dir):
-        if self.direct_dl_var.get(): save_dir = base_dir
+    def execute_download(self, images, gallery_name, actor_name, base_dir, gallery_index):
+        if self.direct_dl_var.get(): 
+            save_dir = base_dir
         else:
             actor_dir = sanitize_filename(actor_name)
-            gallery_dir = sanitize_filename(gallery_name)
+            # Use the index as the folder name instead of the gallery title
+            gallery_dir = str(gallery_index)
             save_dir = os.path.join(base_dir, actor_dir, gallery_dir)
             
         os.makedirs(save_dir, exist_ok=True)
         total, completed, skipped, failed = len(images), 0, 0, 0
         failed_urls = []
-        self.log(f"[+] Starting robust download of {total} images...")
+        self.log(f"[+] Starting robust download of {total} images into folder '{gallery_index}'...")
         threads = int(self.threads_slider.get())
         
         def worker(idx, url):
