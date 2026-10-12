@@ -15,7 +15,7 @@
 
 ---
 
-**[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
+**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/download/Version1.0/Ragalahari_Downloader.exe)**
 
 ## 📑 Table of Contents
 - [🚀 Features](#-features)
@@ -30,7 +30,7 @@
 
 ---
 
-**[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
+**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/download/Version1.0/Ragalahari_Downloader.exe)**
 
 ## 🚀 Features
 
@@ -60,7 +60,7 @@ Older galleries on the website often suffer from dead links or geo-blocking, res
 
 ---
 
-**[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
+**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/download/Version1.0/Ragalahari_Downloader.exe)**
 
 ## 💻 Prerequisites
 
