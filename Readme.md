@@ -8,7 +8,7 @@
   </p>
   <p><i>A professional, multi-threaded Windows GUI application designed to batch-download high-resolution image galleries from Ragalahari.com effortlessly.</i></p>
 
-**[⬇️ Download Portable EXE](https://chat.phoenicx.org/s/BfWqNaQkjT9gPgD/download/Ragalahari_Downloader.exe)**
+**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/download/Version1.0/Ragalahari_Downloader.exe)**
 
   <img src="Screenshot 2026-07-14 102524.png" alt="Ragalahari Downloader Main UI" width="700">
 </div>
