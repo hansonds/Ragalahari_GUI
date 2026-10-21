@@ -1,7 +1,5 @@
 name: Build portable EXE & publish release
 
-# Runs automatically when the app code changes on main,
-# and can also be started by hand from the "Actions" tab (Run workflow).
 on:
   push:
     branches: [main, master]
@@ -20,11 +18,9 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
@@ -39,9 +35,9 @@ jobs:
         id: ver
         shell: bash
         run: |
-          VERSION=$(grep -oP 'APP_VERSION = "\K[^"]+' ragalahari_gui.py)
+          VERSION=$(grep -oP 'APP_VERSION = "\K[^"]+' ragalahari_gui.py || true)
+          if [ -z "$VERSION" ]; then VERSION="1.0.${{ github.run_number }}"; fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Building version $VERSION"
 
       - name: Build single-file portable EXE
         run: >
@@ -54,8 +50,7 @@ jobs:
           --collect-data customtkinter
           --hidden-import pystray._win32
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: Ragalahari_Downloader
           path: dist/Ragalahari_Downloader.exe
@@ -68,11 +63,5 @@ jobs:
           make_latest: true
           files: dist/Ragalahari_Downloader.exe
           body: |
-            ## Ragalahari Gallery Downloader v${{ steps.ver.outputs.version }}
-
             **Portable — no install needed.** Download `Ragalahari_Downloader.exe` below and double-click it.
-
-            - Settings are saved next to the EXE (`ragalahari_gui_config.json`)
-            - Windows SmartScreen may warn on first run because the EXE is unsigned: click **More info → Run anyway**
-
-            Built automatically from commit ${{ github.sha }}.
+            Windows may warn on first run (unsigned app): click **More info → Run anyway**.
