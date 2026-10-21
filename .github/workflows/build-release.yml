@@ -1,0 +1,77 @@
+name: Build portable EXE & publish release
+
+# Runs automatically when the app code changes on main,
+# and can also be started by hand from the "Actions" tab (Run workflow).
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "ragalahari_gui.py"
+      - "requirements.txt"
+      - "logo.ico"
+      - "logo.png"
+      - ".github/workflows/build-release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Read app version
+        id: ver
+        shell: bash
+        run: |
+          VERSION=$(grep -oP 'APP_VERSION = "\K[^"]+' ragalahari_gui.py)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building version $VERSION"
+
+      - name: Build single-file portable EXE
+        run: >
+          pyinstaller ragalahari_gui.py
+          --name Ragalahari_Downloader
+          --onefile --windowed --noconfirm --clean
+          --icon logo.ico
+          --add-data "logo.ico;."
+          --add-data "logo.png;."
+          --collect-data customtkinter
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ragalahari_Downloader
+          path: dist/Ragalahari_Downloader.exe
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.version }}
+          name: Ragalahari Downloader v${{ steps.ver.outputs.version }}
+          make_latest: true
+          files: dist/Ragalahari_Downloader.exe
+          body: |
+            ## Ragalahari Gallery Downloader v${{ steps.ver.outputs.version }}
+
+            **Portable — no install needed.** Download `Ragalahari_Downloader.exe` below and double-click it.
+
+            - Settings are saved next to the EXE (`ragalahari_gui_config.json`)
+            - Windows SmartScreen may warn on first run because the EXE is unsigned: click **More info → Run anyway**
+
+            Built automatically from commit ${{ github.sha }}.
