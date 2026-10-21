@@ -5,17 +5,19 @@
     <img src="https://img.shields.io/badge/UI-CustomTkinter-emerald.svg" alt="CustomTkinter">
     <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
     <img src="https://img.shields.io/badge/platform-Windows-lightgrey.svg" alt="Platform">
+    <img src="https://github.com/hansonds/Ragalahari_GUI/actions/workflows/build-release.yml/badge.svg" alt="Build">
+    <img src="https://img.shields.io/github/v/release/hansonds/Ragalahari_GUI" alt="Release">
   </p>
   <p><i>A professional, multi-threaded Windows GUI application designed to batch-download high-resolution image galleries from Ragalahari.com effortlessly.</i></p>
 
-**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/download/Version1.0/Ragalahari_Downloader.exe)**
+**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/latest/download/Ragalahari_Downloader.exe)**
 
   <img src="Screenshot 2026-07-14 102524.png" alt="Ragalahari Downloader Main UI" width="700">
 </div>
 
 ---
 
-**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/download/Version1.0/Ragalahari_Downloader.exe)**
+**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/latest/download/Ragalahari_Downloader.exe)**
 
 ## 📑 Table of Contents
 - [🚀 Features](#-features)
@@ -30,7 +32,24 @@
 
 ---
 
-**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/download/Version1.0/Ragalahari_Downloader.exe)**
+**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/latest/download/Ragalahari_Downloader.exe)**
+
+## ✨ What's new in v2.0
+
+* **Brand-new dashboard UI** — sidebar navigation (Downloader · History · Settings · About), card layout, live stat tiles for galleries, images, saved, skipped and failed.
+* **Live speed, ETA and elapsed time** while downloading.
+* **Pause / Resume** a running job, plus Stop.
+* **Download queue** — add several gallery or profile links and run them back-to-back.
+* **One-click Retry** for any images that failed.
+* **Smart link badge** — instantly tells you if a link is a single gallery, a full profile, or not a Ragalahari link.
+* **Colour-coded, timestamped activity log** with Copy / Save / Clear.
+* **History page** — every finished job with counts, size, *Open folder* and *Reuse link*.
+* **Settings** — 6 accent themes, open folder when done, finish sound, auto-paste links from clipboard, always-on-top.
+* **Automatic builds** — every update is built into a portable `.exe` by GitHub Actions and published in [Releases](https://github.com/hansonds/Ragalahari_GUI/releases).
+
+> The scraping, CDN recovery, chunked downloading, skip-existing logic and folder layout (`Actor/1, 2, 3…`) are unchanged from v1.
+
+---
 
 ## 🚀 Features
 
@@ -60,9 +79,22 @@ Older galleries on the website often suffer from dead links or geo-blocking, res
 
 ---
 
-**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/download/Version1.0/Ragalahari_Downloader.exe)**
+**[⬇️ Download Portable EXE](https://github.com/hansonds/Ragalahari_GUI/releases/latest/download/Ragalahari_Downloader.exe)**
 
 
+
+## 📦 Building the Executable (.exe)
+
+You don't need to build it yourself — GitHub does it automatically. Every time `ragalahari_gui.py` changes on `main`, the **Build portable EXE & publish release** workflow runs and uploads `Ragalahari_Downloader.exe` to a release named after `APP_VERSION` in the script. Bump `APP_VERSION` to publish a new version; you can also start a build manually from the **Actions** tab → *Run workflow*.
+
+To build locally on Windows:
+
+```bash
+pip install -r requirements.txt pyinstaller
+pyinstaller ragalahari_gui.py --name Ragalahari_Downloader --onefile --windowed --icon logo.ico --add-data "logo.ico;." --add-data "logo.png;." --collect-data customtkinter
+```
+
+---
 
 ## 🤝 Contributing
 
