@@ -194,7 +194,7 @@ import platform
 from datetime import datetime
 
 APP_NAME = "Ragalahari Gallery Downloader"
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.1.0"
 IS_WINDOWS = platform.system() == "Windows"
 
 if IS_WINDOWS:
@@ -203,6 +203,13 @@ if IS_WINDOWS:
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("hansonds.RagalahariDownloader")
     except Exception:
         pass
+
+try:  # System-tray support
+    import pystray
+    from PIL import Image as PILImage
+    HAS_TRAY = True
+except Exception:
+    HAS_TRAY = False
 
 FONT = "Segoe UI" if IS_WINDOWS else "Helvetica"
 MONO = "Consolas" if IS_WINDOWS else "Courier"
@@ -323,6 +330,11 @@ class DownloaderApp(ctk.CTk):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         self.url_entry.bind("<Return>", lambda e: self.start_download_thread() if not self.is_downloading else None)
         self._restart = False
+        self._quitting = False
+        self._tray_hint_shown = False
+        self.tray = None
+        self.bind_all("<Control-q>", lambda e: self.request_exit())
+        self._start_tray()
         self.after(500, self._tick_stats)
         if self.config.get("auto_paste"):
             self.after(400, self._auto_paste)
@@ -338,6 +350,7 @@ class DownloaderApp(ctk.CTk):
             "sound_when_done": True,
             "auto_paste": True,
             "always_on_top": False,
+            "close_to_tray": True,
             "history": [],
             "geometry": "",
         }
@@ -357,24 +370,127 @@ class DownloaderApp(ctk.CTk):
             self.config["sound_when_done"] = self.sound_var.get()
             self.config["auto_paste"] = self.auto_paste_var.get()
             self.config["always_on_top"] = self.top_var.get()
+            self.config["close_to_tray"] = self.tray_var.get()
             self.config["history"] = self.config.get("history", [])[-200:]
             with open(CONFIG_FILE, 'w') as f:
                 json.dump(self.config, f, indent=4)
         except Exception as e:
             self.log(f"[ERROR] Could not save config: {e}")
 
+    # ── Window close / tray / exit ───────────────────────────────────────────
     def on_close(self):
-        if self.is_downloading and not messagebox.askyesno(
-                "Download running", "A download is still running. Quit anyway?"):
-            return
-        self.stop_event.set()
-        self.pause_event.set()
+        """The window's X button: hide to tray (if enabled), otherwise ask to exit."""
+        if self.tray is not None and self.tray_var.get():
+            self.hide_to_tray()
+        else:
+            self.request_exit()
+
+    def hide_to_tray(self):
         try:
             self.config["geometry"] = self.geometry()
         except Exception:
             pass
         self.save_config()
+        self.withdraw()
+        if not self._tray_hint_shown:
+            self._tray_hint_shown = True
+            try:
+                self.tray.notify("Still running in the system tray. Right-click the icon and choose Exit to quit.",
+                                 APP_NAME)
+            except Exception:
+                pass
+
+    def show_window(self):
+        self.deiconify()
+        self.state("normal")
+        self.lift()
+        self.attributes("-topmost", True)
+        self.after(150, lambda: self.attributes("-topmost", bool(self.top_var.get())))
+        self.focus_force()
+
+    def request_exit(self):
+        """Exit with confirmation (sidebar Exit button, tray menu, Ctrl+Q)."""
+        if self._quitting:
+            return
+        if not self.winfo_viewable():
+            self.show_window()
+        msg = "Are you sure you want to exit Ragalahari Downloader?"
+        if self.is_downloading:
+            msg = "A download is still running and will be stopped.\n\n" + msg
+        if not messagebox.askyesno("Exit", msg, icon="warning" if self.is_downloading else "question", parent=self):
+            return
+        self.quit_app()
+
+    def quit_app(self):
+        self._quitting = True
+        self.stop_event.set()
+        self.pause_event.set()
+        try:
+            if self.winfo_viewable():
+                self.config["geometry"] = self.geometry()
+        except Exception:
+            pass
+        self.save_config()
+        self._stop_tray()
         self.destroy()
+
+    def _tray_image(self):
+        try:
+            return PILImage.open(resource_path("logo.png")).convert("RGBA")
+        except Exception:
+            img = PILImage.new("RGBA", (64, 64), (0, 0, 0, 0))
+            from PIL import ImageDraw
+            ImageDraw.Draw(img).rounded_rectangle((4, 4, 60, 60), 14, fill=self.accent)
+            return img
+
+    def _start_tray(self):
+        if not HAS_TRAY:
+            return
+        ui = lambda fn: (lambda icon=None, item=None: self.after(0, fn))
+        try:
+            menu = pystray.Menu(
+                pystray.MenuItem("Show window", ui(self.show_window), default=True),
+                pystray.MenuItem(lambda item: "Resume download" if not self.pause_event.is_set() else "Pause download",
+                                 ui(self.toggle_pause), enabled=lambda item: self.is_downloading),
+                pystray.MenuItem("Stop download", ui(self.stop_download), enabled=lambda item: self.is_downloading),
+                pystray.MenuItem("Open download folder", ui(self.open_save_folder)),
+                pystray.Menu.SEPARATOR,
+                pystray.MenuItem("Exit", ui(self.request_exit)),
+            )
+            image = self._tray_image()
+        except Exception:
+            return
+
+        def run_tray():
+            # Built and run off the UI thread so the window can never hang on the tray.
+            try:
+                icon = pystray.Icon("RagalahariDownloader", image, APP_NAME, menu)
+
+                def ready(ic):
+                    ic.visible = True
+                    self.tray = ic
+                icon.run(setup=ready)
+            except Exception:
+                self.tray = None
+
+        threading.Thread(target=run_tray, daemon=True).start()
+
+    def _stop_tray(self):
+        if self.tray is not None:
+            try:
+                self.tray.stop()
+            except Exception:
+                pass
+            self.tray = None
+
+    def _refresh_tray(self, title=None):
+        if self.tray is None:
+            return
+        try:
+            self.tray.title = (title or APP_NAME)[:120]
+            self.tray.update_menu()
+        except Exception:
+            pass
 
     # ── Layout ───────────────────────────────────────────────────────────────
     def _build_ui(self):
@@ -433,6 +549,11 @@ class DownloaderApp(ctk.CTk):
 
         spacer = ctk.CTkFrame(sb, fg_color="transparent")
         spacer.pack(fill="both", expand=True)
+
+        ctk.CTkButton(sb, text="  ⏻   Exit", anchor="w", height=40, corner_radius=10,
+                      font=ctk.CTkFont(FONT, 13, "bold"), fg_color="transparent",
+                      hover_color="#3A1A26", text_color=BASE["err"],
+                      command=self.request_exit).pack(fill="x", padx=14, pady=(0, 10))
 
         status = ctk.CTkFrame(sb, fg_color=BASE["card"], corner_radius=12)
         status.pack(fill="x", padx=14, pady=(0, 18))
@@ -755,10 +876,12 @@ class DownloaderApp(ctk.CTk):
         self.sound_var = ctk.BooleanVar(value=self.config["sound_when_done"])
         self.auto_paste_var = ctk.BooleanVar(value=self.config["auto_paste"])
         self.top_var = ctk.BooleanVar(value=self.config["always_on_top"])
+        self.tray_var = ctk.BooleanVar(value=self.config["close_to_tray"])
         for var, title, desc, cmd in (
             (self.open_done_var, "Open folder when finished", "Opens the save folder automatically after a job.", self.save_config),
             (self.sound_var, "Play sound when finished", "A short chime when downloads complete.", self.save_config),
             (self.auto_paste_var, "Auto-paste Ragalahari links", "Fills the URL box from your clipboard on start-up.", self.save_config),
+            (self.tray_var, "Close to system tray", "The X button hides the app to the tray. Use Exit (sidebar or tray menu) to quit.", self.save_config),
             (self.top_var, "Keep window on top", "Stays above other windows.", self._apply_topmost),
         ):
             r = ctk.CTkFrame(c2, fg_color="transparent")
@@ -797,6 +920,7 @@ class DownloaderApp(ctk.CTk):
         with open(CONFIG_FILE, 'w') as f:
             json.dump(self.config, f, indent=4)
         self._restart = True
+        self._stop_tray()
         self.destroy()
 
     # ── About page ───────────────────────────────────────────────────────────
@@ -1030,6 +1154,13 @@ class DownloaderApp(ctk.CTk):
             self.overall_label.configure(
                 text=f"Link {j.get('q_i', 1)} of {qn}   ·   gallery {j['gal_i']} of {j['gal_n'] or '?'}" if qn > 1
                 else (f"Gallery {j['gal_i']} of {j['gal_n']}" if j["gal_n"] > 1 else ""))
+        if self.tray is not None:
+            if self.is_downloading:
+                pct = self.pct_label.cget("text")
+                state = "Paused" if not self.pause_event.is_set() else "Downloading"
+                self._refresh_tray(f"Ragalahari — {state} {pct}")
+            elif self.tray.title != APP_NAME:
+                self._refresh_tray(APP_NAME)
         self.after(500, self._tick_stats)
 
     def _set_running_ui(self, running):
@@ -1171,6 +1302,11 @@ class DownloaderApp(ctk.CTk):
             self.toast(f"Finished — {j.get('saved', 0)} saved, {j.get('failed', 0)} failed",
                        "ok" if not j.get("failed") else "warn")
             self.eta_label.configure(text="ETA  00:00")
+            if self.tray is not None and not self.winfo_viewable():
+                try:
+                    self.tray.notify(f"Finished — {j.get('saved', 0)} saved, {j.get('failed', 0)} failed", APP_NAME)
+                except Exception:
+                    pass
             if self.sound_var.get():
                 try:
                     if IS_WINDOWS:

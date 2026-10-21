@@ -2,3 +2,4 @@ customtkinter>=5.2.2
 requests>=2.31
 beautifulsoup4>=4.12
 pillow>=10.0
+pystray>=0.19.5
