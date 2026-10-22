@@ -248,6 +248,9 @@ You never have to build the EXE by hand. The [**Build portable EXE & publish rel
 
 ## 📝 Changelog
 
+**v2.1.1**
+- Title bar (minimise / maximise / close) now matches the app's dark theme and accent colour
+
 **v2.1.0**
 - System tray mode: ✕ hides to the tray, with a tray menu (Show · Pause/Resume · Stop · Open folder · Exit)
 - Exit with confirmation from the tray, the sidebar or Ctrl+Q

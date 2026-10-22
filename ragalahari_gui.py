@@ -194,7 +194,7 @@ import platform
 from datetime import datetime
 
 APP_NAME = "Ragalahari Gallery Downloader"
-APP_VERSION = "2.1.0"
+APP_VERSION = "2.1.1"
 IS_WINDOWS = platform.system() == "Windows"
 
 if IS_WINDOWS:
@@ -335,6 +335,7 @@ class DownloaderApp(ctk.CTk):
         self.tray = None
         self.bind_all("<Control-q>", lambda e: self.request_exit())
         self._start_tray()
+        self.after(10, self._theme_title_bar)
         self.after(500, self._tick_stats)
         if self.config.get("auto_paste"):
             self.after(400, self._auto_paste)
@@ -400,8 +401,43 @@ class DownloaderApp(ctk.CTk):
             except Exception:
                 pass
 
+    # ── Themed Windows title bar ─────────────────────────────────────────────
+    def _theme_title_bar(self):
+        """Colours the Windows title bar (minimise / maximise / close) to match the app.
+        Windows 11: custom caption, text and border colours. Windows 10: dark title bar."""
+        if not IS_WINDOWS:
+            return
+        try:
+            import ctypes
+            from ctypes import wintypes
+            self.update_idletasks()
+            hwnd = ctypes.windll.user32.GetParent(self.winfo_id()) or self.winfo_id()
+            dwm = ctypes.windll.dwmapi.DwmSetWindowAttribute
+
+            def colorref(hex_color):
+                h = hex_color.lstrip("#")
+                r_, g_, b_ = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+                return wintypes.DWORD(r_ | (g_ << 8) | (b_ << 16))
+
+            def setattr_(attr, value):
+                return dwm(hwnd, attr, ctypes.byref(value), ctypes.sizeof(value))
+
+            # Dark mode title bar (20 on newer builds, 19 on early Windows 10)
+            on = ctypes.c_int(1)
+            if setattr_(20, on) != 0:
+                setattr_(19, on)
+            # Windows 11 colours: 34 = border, 35 = caption background, 36 = caption text
+            setattr_(35, colorref(BASE["sidebar"]))
+            setattr_(36, colorref(BASE["text"]))
+            setattr_(34, colorref(self.accent))
+            # Nudge Windows to repaint the frame straight away
+            ctypes.windll.user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0020)
+        except Exception:
+            pass
+
     def show_window(self):
         self.deiconify()
+        self.after(10, self._theme_title_bar)
         self.state("normal")
         self.lift()
         self.attributes("-topmost", True)
