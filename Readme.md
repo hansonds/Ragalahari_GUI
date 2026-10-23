@@ -62,7 +62,7 @@
 | ⏭️ **Skips duplicates** | Photos you already have are skipped, so you can re-run a profile to pick up new galleries. |
 | 🗂️ **History** | Every finished job is listed with counts and size, plus *Open folder* and *Reuse link* buttons. |
 | 🧩 **System tray** | Close the window and it keeps downloading in the tray, then notifies you when it's done. |
-| 🎨 **Themes** | Six accent colours on a dark interface that's easy on the eyes. |
+| 🎨 **Two dark themes** | **Aurora** (soft, low-glare, the default) and **Midnight** (bold and vivid), each with six accent colours. |
 | 💾 **Remembers everything** | Save folder, speed, theme, options and window size are kept between sessions. |
 | 🧳 **Portable** | One `.exe`. Settings live in a small file next to it, so you can carry it on a USB drive. |
 
@@ -159,6 +159,7 @@ Older galleries on the site often show **broken image icons** because of dead li
 
 | Setting | What it does |
 |---|---|
+| **Theme** | **Aurora**: soft and calm, lower contrast, pastel colours (default). **Midnight**: bold and vivid, high contrast. |
 | **Accent colour** | Violet, Ocean, Emerald, Sunset, Rose or Gold. |
 | **Open folder when finished** | Opens the save folder automatically after each job. |
 | **Play sound when finished** | A short chime when downloads complete. |
@@ -247,6 +248,11 @@ You never have to build the EXE by hand. The [**Build portable EXE & publish rel
 ---
 
 ## 📝 Changelog
+
+**v2.2.0**
+- New default **Aurora** theme: softer, low-glare dark colours that are easier on the eyes
+- Theme picker in Settings (switch back to the original **Midnight** look any time)
+- Active menu and queue items get a soft accent glow
 
 **v2.1.1**
 - Title bar (minimise / maximise / close) now matches the app's dark theme and accent colour

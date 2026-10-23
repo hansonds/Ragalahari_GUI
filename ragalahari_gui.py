@@ -194,7 +194,7 @@ import platform
 from datetime import datetime
 
 APP_NAME = "Ragalahari Gallery Downloader"
-APP_VERSION = "2.1.1"
+APP_VERSION = "2.2.0"
 IS_WINDOWS = platform.system() == "Windows"
 
 if IS_WINDOWS:
@@ -214,22 +214,58 @@ except Exception:
 FONT = "Segoe UI" if IS_WINDOWS else "Helvetica"
 MONO = "Consolas" if IS_WINDOWS else "Courier"
 
-# Base dark palette (deep cinematic navy) — accent colour is switchable in Settings
-BASE = {
-    "bg": "#0B0D17", "sidebar": "#10131F", "card": "#161A2B", "card_hi": "#1D2237",
-    "border": "#262C45", "input": "#0E1120", "text": "#E7E9F5", "muted": "#8A90AD",
-    "faint": "#4E5576", "ok": "#3DDC97", "warn": "#FFB547", "err": "#FF5C7A",
-    "info": "#5AB8FF", "dark_text": "#0B0D17",
+# Two dark base themes — picked in Settings. Accent colour is switchable on top of either.
+THEMES = {
+    # Soft, low-glare slate with pastel accents (default — easy on the eyes)
+    "Aurora": {
+        "bg": "#1B1E27", "sidebar": "#20232E", "card": "#252935", "card_hi": "#2D3240",
+        "border": "#363B4A", "input": "#1E212B", "text": "#D3D6E0", "muted": "#949AAE",
+        "faint": "#646A7E", "ok": "#84C9A8", "warn": "#E3C07D", "err": "#E3929F",
+        "info": "#8DB4DE", "dark_text": "#1B1E27", "on_accent": "#1B1E27",
+        "log_text": "#BFC4D3", "err_hover": "#EBA6B1", "warn_hover": "#EBCB91", "exit_hover": "#3A2E35",
+    },
+    # Deep navy with vivid accents (the original v2 look)
+    "Midnight": {
+        "bg": "#0B0D17", "sidebar": "#10131F", "card": "#161A2B", "card_hi": "#1D2237",
+        "border": "#262C45", "input": "#0E1120", "text": "#E7E9F5", "muted": "#8A90AD",
+        "faint": "#4E5576", "ok": "#3DDC97", "warn": "#FFB547", "err": "#FF5C7A",
+        "info": "#5AB8FF", "dark_text": "#0B0D17", "on_accent": "#FFFFFF",
+        "log_text": "#C9CEE8", "err_hover": "#FF7A92", "warn_hover": "#FFC56E", "exit_hover": "#3A1A26",
+    },
+}
+THEME_INFO = {
+    "Aurora": "Soft & calm — lower contrast, pastel colours",
+    "Midnight": "Bold & vivid — high contrast, bright colours",
 }
 
-ACCENTS = {
-    "Violet":  ("#8B5CF6", "#A78BFA"),
-    "Ocean":   ("#3B82F6", "#60A5FA"),
-    "Emerald": ("#10B981", "#34D399"),
-    "Sunset":  ("#F97316", "#FB923C"),
-    "Rose":    ("#EC4899", "#F472B6"),
-    "Gold":    ("#EAB308", "#FACC15"),
+ACCENT_SETS = {
+    "Aurora": {
+        "Violet":  ("#A496E8", "#B7ACF0"),
+        "Ocean":   ("#7EA6E3", "#97B8EA"),
+        "Emerald": ("#74C4A4", "#8FD1B6"),
+        "Sunset":  ("#E8A27C", "#EEB596"),
+        "Rose":    ("#E095B7", "#E8ABC7"),
+        "Gold":    ("#D9BC6E", "#E2CA88"),
+    },
+    "Midnight": {
+        "Violet":  ("#8B5CF6", "#A78BFA"),
+        "Ocean":   ("#3B82F6", "#60A5FA"),
+        "Emerald": ("#10B981", "#34D399"),
+        "Sunset":  ("#F97316", "#FB923C"),
+        "Rose":    ("#EC4899", "#F472B6"),
+        "Gold":    ("#EAB308", "#FACC15"),
+    },
 }
+
+BASE = dict(THEMES["Aurora"])
+ACCENTS = dict(ACCENT_SETS["Aurora"])
+
+
+def mix(c1, c2, t):
+    """Blend colour c1 into c2 by t (0..1)."""
+    a = [int(c1[i:i + 2], 16) for i in (1, 3, 5)]
+    b = [int(c2[i:i + 2], 16) for i in (1, 3, 5)]
+    return "#%02X%02X%02X" % tuple(round(x * t + y * (1 - t)) for x, y in zip(a, b))
 
 
 def detect_link_type(url):
@@ -296,7 +332,13 @@ class DownloaderApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.load_config()
+        self.theme = self.config.get("base_theme") if self.config.get("base_theme") in THEMES else "Aurora"
+        BASE.clear()
+        BASE.update(THEMES[self.theme])
+        ACCENTS.clear()
+        ACCENTS.update(ACCENT_SETS[self.theme])
         self.accent, self.accent_hi = ACCENTS.get(self.config["accent"], ACCENTS["Violet"])
+        self.tint = mix(self.accent, BASE["card"], 0.16)  # soft accent glow for active items
 
         self.title(f"{APP_NAME}  ·  v{APP_VERSION}")
         self.geometry(self.config.get("geometry") or "1200x840")
@@ -347,6 +389,7 @@ class DownloaderApp(ctk.CTk):
             "threads": 3,
             "direct_dl": False,
             "accent": "Violet",
+            "base_theme": "Aurora",
             "open_when_done": False,
             "sound_when_done": True,
             "auto_paste": True,
@@ -588,7 +631,7 @@ class DownloaderApp(ctk.CTk):
 
         ctk.CTkButton(sb, text="  ⏻   Exit", anchor="w", height=40, corner_radius=10,
                       font=ctk.CTkFont(FONT, 13, "bold"), fg_color="transparent",
-                      hover_color="#3A1A26", text_color=BASE["err"],
+                      hover_color=BASE["exit_hover"], text_color=BASE["err"],
                       command=self.request_exit).pack(fill="x", padx=14, pady=(0, 10))
 
         status = ctk.CTkFrame(sb, fg_color=BASE["card"], corner_radius=12)
@@ -613,7 +656,7 @@ class DownloaderApp(ctk.CTk):
         self.pages[key].grid(row=0, column=0, sticky="nsew", padx=26, pady=22)
         for k, b in self.nav_buttons.items():
             if k == key:
-                b.configure(fg_color=BASE["card_hi"], text_color=self.accent_hi)
+                b.configure(fg_color=self.tint, text_color=self.accent_hi)
             else:
                 b.configure(fg_color="transparent", text_color=BASE["muted"])
         if key == "history":
@@ -629,10 +672,10 @@ class DownloaderApp(ctk.CTk):
 
     def _btn(self, master, text, cmd, kind="ghost", width=90, height=40):
         styles = {
-            "accent": (self.accent, self.accent_hi, "#FFFFFF"),
+            "accent": (self.accent, self.accent_hi, BASE["on_accent"]),
             "ghost": (BASE["card_hi"], BASE["border"], BASE["text"]),
-            "danger": (BASE["err"], "#FF7A92", "#FFFFFF"),
-            "warn": (BASE["warn"], "#FFC56E", BASE["dark_text"]),
+            "danger": (BASE["err"], BASE["err_hover"], BASE["on_accent"]),
+            "warn": (BASE["warn"], BASE["warn_hover"], BASE["dark_text"]),
         }
         fg, hv, tc = styles[kind]
         return ctk.CTkButton(master, text=text, command=cmd, width=width, height=height,
@@ -743,7 +786,7 @@ class DownloaderApp(ctk.CTk):
         ctrl.grid(row=0, column=0, sticky="ew", padx=18, pady=(16, 10))
         self.start_btn = ctk.CTkButton(ctrl, text="▶  START DOWNLOAD", height=48, width=200,
                                        corner_radius=12, fg_color=self.accent, hover_color=self.accent_hi,
-                                       text_color="#FFFFFF", font=ctk.CTkFont(FONT, 14, "bold"),
+                                       text_color=BASE["on_accent"], font=ctk.CTkFont(FONT, 14, "bold"),
                                        command=self.start_download_thread)
         self.start_btn.pack(side="left")
         self.pause_btn = self._btn(ctrl, "❚❚  Pause", self.toggle_pause, "ghost", 100, 48)
@@ -791,7 +834,7 @@ class DownloaderApp(ctk.CTk):
         self._btn(lhdr, "Clear", self.clear_log, "ghost", 54, 26).pack(side="right")
 
         self.log_box = ctk.CTkTextbox(left, state="disabled", font=ctk.CTkFont(MONO, 12),
-                                      fg_color=BASE["input"], text_color="#C9CEE8",
+                                      fg_color=BASE["input"], text_color=BASE["log_text"],
                                       corner_radius=12, border_width=0, wrap="word")
         self.log_box.grid(row=3, column=0, sticky="nsew", padx=18, pady=(0, 18))
         for tag, col in (("ok", BASE["ok"]), ("err", BASE["err"]), ("warn", BASE["warn"]),
@@ -892,17 +935,39 @@ class DownloaderApp(ctk.CTk):
         c1 = self._card(page)
         c1.grid(row=1, column=0, sticky="ew", pady=(0, 14))
         self._section_label(c1, "APPEARANCE").pack(anchor="w", padx=20, pady=(16, 8))
+        ctk.CTkLabel(c1, text="Theme", font=ctk.CTkFont(FONT, 13), text_color=BASE["text"]).pack(anchor="w", padx=20)
+        tr = ctk.CTkFrame(c1, fg_color="transparent")
+        tr.pack(fill="x", padx=20, pady=(8, 14))
+        for name in THEMES:
+            t = THEMES[name]
+            sel = name == self.theme
+            box = ctk.CTkFrame(tr, fg_color=t["bg"], corner_radius=14, border_width=2,
+                               border_color=self.accent if sel else BASE["border"])
+            box.pack(side="left", padx=(0, 12))
+            sw_row = ctk.CTkFrame(box, fg_color="transparent")
+            sw_row.pack(anchor="w", padx=14, pady=(12, 6))
+            for col in (t["sidebar"], t["card_hi"], ACCENT_SETS[name][self.config["accent"]][0], t["ok"], t["text"]):
+                ctk.CTkFrame(sw_row, fg_color=col, width=22, height=22, corner_radius=11).pack(side="left", padx=(0, 5))
+            ctk.CTkLabel(box, text=("✓  " if sel else "") + name, font=ctk.CTkFont(FONT, 13, "bold"),
+                         text_color=t["text"], anchor="w").pack(anchor="w", padx=14)
+            ctk.CTkLabel(box, text=THEME_INFO[name], font=ctk.CTkFont(FONT, 11),
+                         text_color=t["muted"], anchor="w").pack(anchor="w", padx=14, pady=(0, 10))
+            ctk.CTkButton(box, text="In use" if sel else "Use this theme", height=30, corner_radius=8,
+                          state="disabled" if sel else "normal",
+                          fg_color=t["card_hi"], hover_color=t["border"], text_color=t["text"],
+                          text_color_disabled=t["muted"], font=ctk.CTkFont(FONT, 12, "bold"),
+                          command=lambda n=name: self.set_theme(n)).pack(fill="x", padx=14, pady=(0, 12))
         ctk.CTkLabel(c1, text="Accent colour", font=ctk.CTkFont(FONT, 13), text_color=BASE["text"]).pack(anchor="w", padx=20)
         sw = ctk.CTkFrame(c1, fg_color="transparent")
         sw.pack(anchor="w", padx=20, pady=(8, 6))
         for name, (col, hi) in ACCENTS.items():
             sel = name == self.config["accent"]
             ctk.CTkButton(sw, text="✓" if sel else "", width=40, height=40, corner_radius=20,
-                          fg_color=col, hover_color=hi, text_color="#FFFFFF",
+                          fg_color=col, hover_color=hi, text_color=BASE["on_accent"],
                           border_width=3 if sel else 0, border_color=BASE["text"],
                           font=ctk.CTkFont(FONT, 14, "bold"),
                           command=lambda n=name: self.set_accent(n)).pack(side="left", padx=(0, 10))
-        ctk.CTkLabel(c1, text="Changing the accent restarts the window (settings are kept).",
+        ctk.CTkLabel(c1, text="Changing the theme or accent refreshes the window (settings are kept).",
                      font=ctk.CTkFont(FONT, 11), text_color=BASE["faint"]).pack(anchor="w", padx=20, pady=(0, 16))
 
         c2 = self._card(page)
@@ -944,10 +1009,15 @@ class DownloaderApp(ctk.CTk):
         self.attributes("-topmost", self.top_var.get())
         self.save_config()
 
-    def set_accent(self, name):
+    def set_theme(self, name):
+        self.set_accent(self.config["accent"], theme=name)
+
+    def set_accent(self, name, theme=None):
         if self.is_downloading:
             return self.toast("Can't change theme while downloading", "warn")
         self.config["accent"] = name
+        if theme:
+            self.config["base_theme"] = theme
         self.save_config()
         try:
             self.config["geometry"] = self.geometry()
@@ -992,11 +1062,11 @@ class DownloaderApp(ctk.CTk):
         if t is None:
             self.type_badge.configure(text="", fg_color="transparent")
         elif t == "profile":
-            self.type_badge.configure(text="👤  PROFILE · ALL GALLERIES", fg_color=self.accent, text_color="#FFFFFF")
+            self.type_badge.configure(text="👤  PROFILE · ALL GALLERIES", fg_color=self.accent, text_color=BASE["on_accent"])
         elif t == "gallery":
             self.type_badge.configure(text="🖼  SINGLE GALLERY", fg_color=BASE["info"], text_color=BASE["dark_text"])
         else:
-            self.type_badge.configure(text="⚠  NOT A RAGALAHARI LINK", fg_color=BASE["err"], text_color="#FFFFFF")
+            self.type_badge.configure(text="⚠  NOT A RAGALAHARI LINK", fg_color=BASE["err"], text_color=BASE["on_accent"])
 
     def toast(self, msg, kind="ok"):
         col = {"ok": BASE["ok"], "warn": BASE["warn"], "err": BASE["err"], "info": BASE["info"]}[kind]
@@ -1090,7 +1160,7 @@ class DownloaderApp(ctk.CTk):
         for i, u in enumerate(self.queue, 1):
             is_active = u == active
             r = ctk.CTkFrame(self.queue_frame, corner_radius=10,
-                             fg_color=BASE["card_hi"] if is_active else BASE["card"],
+                             fg_color=self.tint if is_active else BASE["card"],
                              border_width=1 if is_active else 0, border_color=self.accent)
             r.pack(fill="x", pady=3, padx=2)
             t = detect_link_type(u)
@@ -1203,14 +1273,14 @@ class DownloaderApp(ctk.CTk):
         if running:
             self.start_btn.configure(state="disabled", fg_color=BASE["card_hi"], text_color=BASE["muted"],
                                      text="⏳  DOWNLOADING…")
-            self.stop_btn.configure(state="normal", fg_color=BASE["err"], hover_color="#FF7A92", text_color="#FFFFFF")
+            self.stop_btn.configure(state="normal", fg_color=BASE["err"], hover_color=BASE["err_hover"], text_color=BASE["on_accent"])
             self.pause_btn.configure(state="normal", text="❚❚  Pause")
             self.retry_btn.pack_forget()
             self.sb_dot.configure(text_color=self.accent_hi)
             self.sb_state.configure(text="Downloading")
             self.header_status.configure(text="Working…")
         else:
-            self.start_btn.configure(state="normal", fg_color=self.accent, text_color="#FFFFFF",
+            self.start_btn.configure(state="normal", fg_color=self.accent, text_color=BASE["on_accent"],
                                      text="▶  START DOWNLOAD")
             self.stop_btn.configure(state="disabled", fg_color=BASE["card_hi"], text_color=BASE["muted"])
             self.pause_btn.configure(state="disabled", text="❚❚  Pause")
